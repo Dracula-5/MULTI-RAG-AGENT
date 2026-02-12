@@ -5,6 +5,7 @@ __pycache__/
 frontend/node_modules/
 frontend/build/
 frontend/build_tmp/
+frontend/build_tmp*/
 
 .env
 backend/.env
