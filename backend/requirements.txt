@@ -1,5 +1,5 @@
 fastapi
-uvicorn
+uvicorn[standard]
 python-dotenv
 sqlalchemy
 langchain>=0.1.0
@@ -10,3 +10,5 @@ faiss-cpu
 tiktoken
 passlib[bcrypt]
 python-jose
+python-multipart
+psycopg2-binary

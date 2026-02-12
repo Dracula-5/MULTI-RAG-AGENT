@@ -1,15 +1,20 @@
-from langchain.agents import create_react_agent, AgentExecutor
-from langchain import hub
-from langchain_openai import OpenAI
+import os
+from langchain_classic.agents import AgentType, initialize_agent
+from langchain_openai import ChatOpenAI
 from .tools import tools
 
-llm = OpenAI(temperature=0)
+llm = ChatOpenAI(
+    model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
+    temperature=0,
+)
 
-prompt = hub.pull("hwchase17/react")
-
-agent = create_react_agent(llm, tools, prompt)
-
-executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+executor = initialize_agent(
+    tools=tools,
+    llm=llm,
+    agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+    verbose=False,
+    handle_parsing_errors=True,
+)
 
 def ask(question):
     return executor.invoke({"input": question})["output"]

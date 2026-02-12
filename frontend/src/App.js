@@ -1,38 +1,60 @@
 import { useState } from "react";
 
+const API_BASE_URL = (process.env.REACT_APP_API_URL || "http://127.0.0.1:8000").replace(/\/+$/, "");
+
 function App() {
   const [question, setQuestion] = useState("");
-  const [answer, setAnswer] = useState("");
   const [loading, setLoading] = useState(false);
   const [chatHistory, setChatHistory] = useState([]);
   const [file, setFile] = useState(null);
+  const [error, setError] = useState("");
 
   const askQuestion = async () => {
     if (!question) return;
     setLoading(true);
-    const res = await fetch("http://127.0.0.1:8000/ask", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ question }),
-    });
-    const data = await res.json();
-    setAnswer(data.answer);
-    setChatHistory([...chatHistory, { q: question, a: data.answer }]);
-    setQuestion("");
-    setLoading(false);
+    setError("");
+    try {
+      const res = await fetch(`${API_BASE_URL}/ask`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ question }),
+      });
+
+      if (!res.ok) {
+        const message = await res.text();
+        throw new Error(message || `Request failed with status ${res.status}`);
+      }
+
+      const data = await res.json();
+      setChatHistory((prev) => [...prev, { q: question, a: data.answer }]);
+      setQuestion("");
+    } catch (err) {
+      setError(err.message || "Failed to ask question.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const uploadFile = async () => {
     if (!file) return;
     const formData = new FormData();
     formData.append("file", file);
-    await fetch("http://127.0.0.1:8000/upload", {
-      method: "POST",
-      body: formData,
-    });
-    alert("File uploaded");
+    setError("");
+    try {
+      const res = await fetch(`${API_BASE_URL}/upload`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const message = await res.text();
+        throw new Error(message || `Upload failed with status ${res.status}`);
+      }
+    } catch (err) {
+      setError(err.message || "File upload failed.");
+    }
   };
 
   return (
@@ -63,6 +85,7 @@ function App() {
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
         />
+        {error && <p style={{ color: "red", marginTop: "8px" }}>{error}</p>}
         <button onClick={askQuestion} style={{ marginTop: "10px", padding: "10px" }} disabled={loading}>
           {loading ? "Thinking..." : "Ask"}
         </button>
