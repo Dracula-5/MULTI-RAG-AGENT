@@ -1,18 +1,36 @@
 from pathlib import Path
+from typing import List
 from langchain_community.document_loaders import TextLoader
+from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings
 from ..config import DATA_DIR
 
+SUPPORTED_TEXT_SUFFIXES = {".txt", ".md", ".csv", ".log"}
+SUPPORTED_PDF_SUFFIXES = {".pdf"}
+
+
+def _load_file(file_path: Path):
+    suffix = file_path.suffix.lower()
+    if suffix in SUPPORTED_TEXT_SUFFIXES:
+        return TextLoader(str(file_path), encoding="utf-8").load()
+    if suffix in SUPPORTED_PDF_SUFFIXES:
+        return PyPDFLoader(str(file_path)).load()
+    return []
+
 
 def _load_documents(folder: Path):
-    docs = []
+    docs: List = []
     if not folder.exists():
         return docs
 
     for file_path in folder.iterdir():
         if file_path.is_file():
-            docs.extend(TextLoader(str(file_path), encoding="utf-8").load())
+            try:
+                docs.extend(_load_file(file_path))
+            except Exception:
+                # Skip unreadable/unsupported files and continue ingestion for valid files.
+                continue
     return docs
 
 

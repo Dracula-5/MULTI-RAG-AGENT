@@ -18,7 +18,23 @@ def ask_question(data: QueryRequest) -> QueryResponse:
     try:
         answer = ask(question)
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Failed to process question: {exc}") from exc
+        error_text = str(exc).lower()
+        if "api key" in error_text:
+            return QueryResponse(
+                answer=(
+                    "The assistant is not configured with a valid OpenAI API key. "
+                    "Set OPENAI_API_KEY in backend environment variables and redeploy."
+                )
+            )
+        if "insufficient_quota" in error_text or "error code: 429" in error_text:
+            return QueryResponse(
+                answer=(
+                    "I cannot generate a live AI answer right now because the OpenAI API quota is exhausted. "
+                    "Please top up billing or increase project limits, then retry. "
+                    "If this persists, verify the API key belongs to the project with available credits."
+                )
+            )
+        raise HTTPException(status_code=500, detail="Failed to process question due to a backend error.") from exc
 
     return QueryResponse(answer=answer)
 

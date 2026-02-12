@@ -1,6 +1,9 @@
 venv/
+backend/.venv/
 __pycache__/
 *.pyc
+**/__pycache__/
+*.pyo
 
 frontend/node_modules/
 frontend/build/
@@ -10,3 +13,4 @@ frontend/build_tmp*/
 .env
 backend/.env
 frontend/.env
+backend/app.db
