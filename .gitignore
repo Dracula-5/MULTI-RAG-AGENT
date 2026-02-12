@@ -14,3 +14,4 @@ frontend/build_tmp*/
 backend/.env
 frontend/.env
 backend/app.db
+data/hr_docs/*.pdf
